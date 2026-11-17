@@ -155,6 +155,11 @@ a.btn:active, .lang button:active, .key.is-down {
 .top .wrap { display: flex; align-items: center; gap: 20px; padding-block: 12px; }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font: 700 1.2rem/1 var(--display); letter-spacing: -0.01em; }
 .brand img { width: 32px; height: 32px; border-radius: 8px; }
+/* "Beta" tag, as in the apps: the pixel font on the Talk color. */
+.beta {
+  font: 400 0.6rem/1 var(--pixel); letter-spacing: 0.08em; text-transform: uppercase;
+  background: var(--talk); color: var(--talk-ink); padding: 4px 6px 3px; border-radius: 6px;
+}
 .top nav { display: flex; gap: 18px; margin-left: auto; }
 .top nav a { text-decoration: none; color: var(--on-bezel-soft); font-size: 0.95rem; }
 .top nav a:hover { color: var(--on-bezel); }
@@ -186,7 +191,7 @@ a.btn:active, .lang button:active, .key.is-down {
 .btn svg { width: 20px; height: 20px; flex: none; }
 .btn-talk { background: var(--talk); color: var(--talk-ink); --edge: var(--edge-talk); }
 .btn-talk:hover { background: var(--talk-active); }
-/* Secondary, on the dark band: a gray key. "Coming soon" isn't a link: it doesn't sink. */
+/* Secondary, on the dark band: a gray key. "Soon" isn't a link: it doesn't sink. */
 .btn-ghost { background: var(--bezel-key); color: var(--on-bezel); --edge: var(--edge-bezel); }
 a.btn-ghost:hover { filter: brightness(1.1); }
 .btn-ghost[aria-disabled="true"] { cursor: default; }
@@ -407,6 +412,7 @@ footer p { max-width: 70ch; }
     <a class="brand" href="#">
       <img src="img/apple-touch-icon.png" alt="" width="32" height="32">
       Remotrol
+      <span class="beta">Beta</span>
     </a>
     <nav>
       <a href="#funciones"><span data-l="es">Funciones</span><span data-l="en">Features</span></a>
@@ -425,7 +431,7 @@ footer p { max-width: 70ch; }
   <section class="hero" aria-labelledby="hero-title">
     <div class="wrap">
       <div class="hero-copy">
-        <p class="eyebrow"><span data-l="es">iPhone · iPad · Mac</span><span data-l="en">iPhone · iPad · Mac</span></p>
+        <p class="eyebrow"><span data-l="es">iPhone · iPad · Mac · Beta pública</span><span data-l="en">iPhone · iPad · Mac · Public beta</span></p>
         <h1 id="hero-title">
           <span data-l="es">Tu Mac, <em>a un toque</em> desde el iPhone.</span>
           <span data-l="en">Your Mac, <em>one tap away</em> on your iPhone.</span>
@@ -437,9 +443,11 @@ footer p { max-width: 70ch; }
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>
             <span data-l="es">Descargar Remotrol Mac</span><span data-l="en">Download Remotrol Mac</span>
           </a>
+          <!-- iPhone and iPad app: public beta on TestFlight. When its public link exists, turn this into
+               <a class="btn btn-ghost" href="https://testflight.apple.com/join/…"> and drop "soon" (SPEC.md, "Web"). -->
           <span class="btn btn-ghost" aria-disabled="true">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.4 2-3.5 2-3.6-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.9-.9-3.1-.8C6.8 7.3 5.3 8.2 4.5 9.6c-1.7 2.9-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8s1.9.8 3.1.8c1.3 0 2.1-1.2 2.9-2.4.9-1.3 1.3-2.6 1.3-2.7 0 0-2.6-1-2.7-4zM14.2 5.6c.6-.8 1.1-1.9 1-3-.9 0-2.1.6-2.7 1.4-.6.7-1.1 1.8-1 2.9 1 .1 2.1-.5 2.7-1.3z"/></svg>
-            <span><span data-l="es">App Store</span><span data-l="en">App Store</span><br><small><span data-l="es">Próximamente</span><span data-l="en">Coming soon</span></small></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg>
+            <span><span data-l="es">iPhone y iPad</span><span data-l="en">iPhone and iPad</span><br><small><span data-l="es">Beta en TestFlight · pronto</span><span data-l="en">TestFlight beta · soon</span></small></span>
           </span>
         </div>
         <p class="reqs" data-l="es">Gratis. Mac con macOS 13 o posterior; iPhone o iPad con iOS 17 o posterior, en la misma wifi.</p>
@@ -682,8 +690,8 @@ footer p { max-width: 70ch; }
         <li>
           <span class="n"><span data-l="es">Paso 3</span><span data-l="en">Step 3</span></span>
           <h3><span data-l="es">Escanea el QR</span><span data-l="en">Scan the QR code</span></h3>
-          <p data-l="es">Abre Remotrol en el iPhone o el iPad y escanea el código que enseña el Mac. Ya está vinculado.</p>
-          <p data-l="en">Open Remotrol on your iPhone or iPad and scan the code the Mac shows. They're paired.</p>
+          <p data-l="es">Instala Remotrol en el iPhone o el iPad con TestFlight, ábrela y escanea el código que enseña el Mac. Ya está vinculado.</p>
+          <p data-l="en">Install Remotrol on your iPhone or iPad with TestFlight, open it and scan the code the Mac shows. They're paired.</p>
         </li>
       </ol>
     </div>
@@ -730,6 +738,11 @@ footer p { max-width: 70ch; }
         <h2 id="faq-title"><span data-l="es">Preguntas frecuentes</span><span data-l="en">Frequently asked questions</span></h2>
       </div>
       <div class="faq">
+        <details>
+          <summary><span data-l="es">¿Qué quiere decir que está en beta?</span><span data-l="en">What does it mean that it's in beta?</span></summary>
+          <p data-l="es">Que ya funciona, pero aún puede tener fallos y cambiar de una versión a otra. La app del iPhone y el iPad se instala con TestFlight, la app de Apple para probar betas, y llegará a la App Store más adelante. Remotrol Mac se actualiza sola. Si algo falla o echas algo en falta, cuéntalo desde TestFlight o en las <a href="https://github.com/jon-gonzalez/remotrol-releases/issues">incidencias de GitHub</a>.</p>
+          <p data-l="en">That it already works, but it may still have bugs and change from one version to the next. The iPhone and iPad app installs with TestFlight, Apple's app for testing betas, and will come to the App Store later. Remotrol Mac updates itself. If something breaks or you miss something, tell us from TestFlight or in the <a href="https://github.com/jon-gonzalez/remotrol-releases/issues">GitHub issues</a>.</p>
+        </details>
         <details>
           <summary><span data-l="es">¿Cuánto cuesta?</span><span data-l="en">How much does it cost?</span></summary>
           <p data-l="es">Nada. Las dos apps son gratis, sin compras dentro ni suscripciones.</p>
@@ -778,8 +791,8 @@ footer p { max-width: 70ch; }
           <span data-l="es">Todas las versiones</span><span data-l="en">All versions</span>
         </a>
       </div>
-      <p class="reqs" data-l="es">La app del iPhone y el iPad llegará pronto a la App Store.</p>
-      <p class="reqs" data-l="en">The iPhone and iPad app is coming soon to the App Store.</p>
+      <p class="reqs" data-l="es">La app del iPhone y el iPad se instala con TestFlight, en beta pública. El enlace estará aquí muy pronto.</p>
+      <p class="reqs" data-l="en">The iPhone and iPad app installs with TestFlight, as a public beta. The link will be here very soon.</p>
     </div>
   </section>
 </main>
