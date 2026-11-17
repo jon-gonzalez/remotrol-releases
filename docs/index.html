@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Remotrol</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Remotrol convierte tu iPhone o iPad en un panel de botones y un mando para tu Mac: dicta, confirma y responde sin ir al teclado.">
+<meta name="theme-color" content="#2A2E36">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Remotrol">
+<meta property="og:description" content="Tu iPhone o iPad, convertido en un panel de botones y un mando para tu Mac.">
+<meta property="og:image" content="https://jon-gonzalez.github.io/remotrol-releases/img/robotin.png">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<style>
+/* Layout: a handheld console. A dark bezel band holds the hero with the live LCD (the one bold
+   moment); everything below sits on the app's own day or night surface, set in its type. */
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("fonts/SpaceGrotesk-Variable.ttf") format("truetype");
+  font-weight: 300 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Silkscreen";
+  src: url("fonts/Silkscreen-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+:root {
+  /* Day: the app's light console. */
+  --bg: #E9EAEE;
+  --surface: #FFFFFF;
+  --raised: #D9DCE3;
+  --line: #CDD1D9;
+  --bezel: #2A2E36;
+  --bezel-deep: #1C1F25;
+  --on-bezel: #F2F3F5;
+  --on-bezel-soft: #B9BFCA;
+  --ink: #14161A;
+  --ink-soft: #2F343C;
+  --muted: #5B6270;
+  --lcd: #C5D8B4;
+  --lcd-ink: #1F2A1E;
+  --talk: #F5A524;
+  --talk-active: #FFD27A;
+  --talk-ink: #1A1300;
+  --confirm: #2563EB;
+  --confirm-ink: #FFFFFF;
+  --cancel: #E8642C;
+  --cancel-ink: #C2410C;
+  --online: #1F9D55;
+  --focus: #2563EB;
+
+  --display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --text: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --pixel: "Silkscreen", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --step--1: 0.875rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.25rem;
+  --step-2: 1.6rem;
+  --step-3: clamp(1.9rem, 1.4rem + 2vw, 2.6rem);
+  --step-4: clamp(2.6rem, 1.6rem + 4.4vw, 4.6rem);
+
+  --radius-key: 18px;
+  --wrap: 1120px;
+  /* Key edges, like the app's (PadKeyStyle): the fill's color with less brightness. */
+  --depth: 4px;
+  --edge-talk: #B0771A; --edge-confirm: #1B47A9; --edge-raised: #9C9EA4;
+  --edge-surface: #B8B8B8; --edge-cancel: #A74820; --edge-lcd: #8E9C82;
+  --bezel-key: #3A3F48; --edge-bezel: #15171B;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14161A; --surface: #1C1F25; --raised: #2A2E36; --line: #2F343C;
+    --bezel: #0B0C0F; --bezel-deep: #000000; --on-bezel: #F2F3F5; --on-bezel-soft: #A9AFBA;
+    --ink: #F2F3F5; --ink-soft: #D5D9E0; --muted: #A9AFBA;
+    --cancel: #FF9466; --cancel-ink: #FFB08C; --online: #7EE2A8; --focus: #7FA6FF;
+    --edge-talk: #936316; --edge-confirm: #163B8D; --edge-raised: #191C20;
+    --edge-surface: #111316; --edge-cancel: #99593D; --bezel-key: #23262D; --edge-bezel: #000000;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14161A; --surface: #1C1F25; --raised: #2A2E36; --line: #2F343C;
+  --bezel: #0B0C0F; --bezel-deep: #000000; --on-bezel: #F2F3F5; --on-bezel-soft: #A9AFBA;
+  --ink: #F2F3F5; --ink-soft: #D5D9E0; --muted: #A9AFBA;
+  --cancel: #FF9466; --cancel-ink: #FFB08C; --online: #7EE2A8; --focus: #7FA6FF;
+  --edge-talk: #936316; --edge-confirm: #163B8D; --edge-raised: #191C20;
+  --edge-surface: #111316; --edge-cancel: #99593D; --bezel-key: #23262D; --edge-bezel: #000000;
+  color-scheme: dark;
+}
+
+/* Language: both are in the page; only the chosen one shows. */
+:root[lang="es"] [data-l="en"], :root[lang="en"] [data-l="es"] { display: none !important; }
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 var(--step-0)/1.55 var(--text);
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--bezel);
+}
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 6px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+p { margin: 0; }
+
+.wrap {
+  width: 100%;
+  max-width: var(--wrap);
+  margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.eyebrow {
+  font: 400 0.75rem/1 var(--pixel);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---------- Keys ----------
+   Every button (and every key in the mocks) has an edge below, darker than its fill, like the
+   app's keys. Pressed, it sinks onto the edge: 1px of it is left. --edge sets the color and --ring
+   an outline (Cancel, the options with a border). */
+.btn, .lang button, .key, .opt, .board .cap, .unlock {
+  --edge: var(--edge-raised); --ring: 0 0 #0000;
+  box-shadow: var(--ring), 0 var(--depth) 0 var(--edge);
+  transition: transform .1s ease, box-shadow .1s ease, background-color .12s ease, filter .1s ease;
+}
+a.btn:active, .lang button:active, .key.is-down {
+  transform: translateY(calc(var(--depth) - 1px));
+  box-shadow: var(--ring), 0 1px 0 var(--edge);
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn, .lang button, .key, .opt, .board .cap, .unlock { transition: none; }
+}
+
+/* ---------- Header ---------- */
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--bezel);
+  color: var(--on-bezel);
+  border-bottom: 1px solid rgb(255 255 255 / 0.06);
+}
+.top .wrap { display: flex; align-items: center; gap: 20px; padding-block: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font: 700 1.2rem/1 var(--display); letter-spacing: -0.01em; }
+.brand img { width: 32px; height: 32px; border-radius: 8px; }
+.top nav { display: flex; gap: 18px; margin-left: auto; }
+.top nav a { text-decoration: none; color: var(--on-bezel-soft); font-size: 0.95rem; }
+.top nav a:hover { color: var(--on-bezel); }
+.lang { display: flex; gap: 4px; background: var(--bezel-deep); border-radius: 12px; padding: 4px 4px 6px; }
+.lang button {
+  appearance: none; border: 0; background: var(--bezel-key); color: var(--on-bezel-soft);
+  --depth: 2px; --edge: var(--edge-bezel);
+  font: 400 0.7rem/1 var(--pixel); letter-spacing: 0.06em; padding: 7px 10px; border-radius: 8px; cursor: pointer;
+}
+.lang button[aria-pressed="true"] { background: var(--lcd); color: var(--lcd-ink); --edge: var(--edge-lcd); }
+@media (max-width: 720px) { .top nav { display: none; } .lang { margin-left: auto; } }
+
+/* ---------- Hero ---------- */
+.hero { background: var(--bezel); color: var(--on-bezel); overflow: hidden; }
+.hero .wrap {
+  display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(32px, 5vw, 72px); align-items: center; padding-block: clamp(40px, 7vw, 88px);
+}
+.hero-copy { display: grid; gap: 22px; min-width: 0; }
+.hero .eyebrow { color: var(--lcd); }
+.hero h1 { font-size: var(--step-4); line-height: 0.98; letter-spacing: -0.035em; font-weight: 700; }
+.hero h1 em { font-style: normal; color: var(--talk); }
+.lead { font-size: var(--step-1); line-height: 1.5; color: var(--on-bezel-soft); max-width: 34ch; }
+.ctas { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 22px;
+  border-radius: 16px; font: 600 1rem/1 var(--display); text-decoration: none;
+}
+.btn svg { width: 20px; height: 20px; flex: none; }
+.btn-talk { background: var(--talk); color: var(--talk-ink); --edge: var(--edge-talk); }
+.btn-talk:hover { background: var(--talk-active); }
+/* Secondary, on the dark band: a gray key. "Coming soon" isn't a link: it doesn't sink. */
+.btn-ghost { background: var(--bezel-key); color: var(--on-bezel); --edge: var(--edge-bezel); }
+a.btn-ghost:hover { filter: brightness(1.1); }
+.btn-ghost[aria-disabled="true"] { cursor: default; }
+.btn-ghost small { font: 400 0.68rem/1 var(--pixel); letter-spacing: 0.06em; color: var(--lcd); text-transform: uppercase; }
+.reqs { font-size: var(--step--1); color: var(--on-bezel-soft); }
+@media (max-width: 860px) {
+  .hero .wrap { grid-template-columns: minmax(0, 1fr); }
+  .hero-device { justify-self: center; }
+}
+
+/* ---------- The device (hero and smaller mocks) ---------- */
+.device {
+  width: min(360px, 100%);
+  background: var(--bg);
+  border-radius: 46px;
+  padding: 18px 16px 22px;
+  border: 10px solid #050607;
+  box-shadow: 0 40px 80px -30px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.08);
+  display: grid; gap: 12px;
+  color: var(--ink);
+}
+.status {
+  display: flex; justify-content: space-between; align-items: center;
+  font: 600 0.78rem/1 var(--text); color: var(--muted); padding: 0 6px;
+}
+.status .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--online); margin-right: 6px; }
+.lcd-frame { background: var(--bezel); border-radius: 26px; padding: 12px; }
+.lcd {
+  background: var(--lcd); color: var(--lcd-ink); border-radius: 15px;
+  padding: 12px 14px 12px; display: grid; gap: 4px;
+  font-family: var(--pixel); font-size: 0.72rem; line-height: 1.2;
+  text-transform: uppercase; letter-spacing: 0.02em;
+}
+.lcd .row { display: flex; justify-content: space-between; gap: 10px; white-space: nowrap; }
+.lcd .row span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.lcd .stage { display: grid; place-items: center; height: 132px; }
+.lcd canvas { image-rendering: pixelated; display: block; }
+.lcd .msg { text-align: center; font-size: 0.95rem; text-transform: none; min-height: 1.3em; }
+.keys { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 10px; padding-bottom: var(--depth); }
+.key {
+  display: grid; place-items: center; gap: 4px; min-height: 76px; border-radius: var(--radius-key);
+  font: 600 0.9rem/1 var(--display);
+  user-select: none;
+}
+.key svg { width: 22px; height: 22px; }
+.key-review { background: var(--raised); color: var(--ink); }
+.key-cancel { background: var(--surface); color: var(--cancel-ink); --ring: inset 0 0 0 2px var(--cancel); --edge: var(--edge-cancel); }
+.key-confirm { background: var(--confirm); color: var(--confirm-ink); --edge: var(--edge-confirm); }
+.key-talk {
+  grid-column: 1 / -1; min-height: 64px; grid-auto-flow: column; gap: 10px;
+  background: var(--talk); color: var(--talk-ink); font-size: 1.05rem; --edge: var(--edge-talk);
+}
+.key.is-down { filter: brightness(1.04); }
+.key-talk.is-down { background: var(--talk-active); }
+
+/* ---------- Sections ---------- */
+section { padding-block: clamp(56px, 8vw, 104px); }
+.section-head { display: grid; gap: 12px; max-width: 46rem; margin-bottom: clamp(32px, 5vw, 56px); }
+.section-head h2 { font-size: var(--step-3); line-height: 1.08; letter-spacing: -0.025em; }
+.section-head p { color: var(--ink-soft); font-size: var(--step-1); line-height: 1.5; }
+
+/* Features: alternating rows, each with its own small mock. */
+.features { display: grid; gap: clamp(48px, 7vw, 88px); }
+.feature {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 72px); align-items: center;
+}
+.feature:nth-child(even) .feature-art { order: -1; }
+.feature-copy { display: grid; gap: 14px; min-width: 0; }
+.feature-copy h3 { font-size: var(--step-2); line-height: 1.15; letter-spacing: -0.02em; }
+.feature-copy p { color: var(--ink-soft); max-width: 60ch; }
+.feature-copy ul { margin: 0; padding-left: 1.1em; color: var(--ink-soft); display: grid; gap: 6px; }
+.feature-art {
+  min-width: 0; background: var(--surface); border-radius: 28px; padding: clamp(18px, 3vw, 32px);
+  border: 1px solid var(--line); display: grid; place-items: center;
+}
+@media (max-width: 860px) {
+  .feature { grid-template-columns: minmax(0, 1fr); }
+  .feature:nth-child(even) .feature-art { order: 0; }
+}
+
+/* Mock: button board */
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 10px; width: min(360px, 100%); padding-bottom: var(--depth); }
+.board .cap {
+  aspect-ratio: 1 / 0.86; max-width: 100%; border-radius: 16px; background: var(--raised); color: var(--ink);
+  display: grid; place-items: center; align-content: center; gap: 6px; text-align: center; padding: 6px;
+  font: 600 0.78rem/1.15 var(--display);
+}
+.board .cap b { font: 400 0.95rem/1 var(--pixel); }
+.board .cap.accent { background: var(--talk); color: var(--talk-ink); --edge: var(--edge-talk); }
+.board .cap.blue { background: var(--confirm); color: var(--confirm-ink); --edge: var(--edge-confirm); }
+.board .dial {
+  grid-column: span 3; aspect-ratio: auto; min-height: 58px; border-radius: 999px;
+  background: repeating-linear-gradient(90deg, var(--raised) 0 10px, var(--surface) 10px 12px);
+  --ring: inset 0 0 0 2px var(--line); position: relative;
+}
+.board .dial::after {
+  content: ""; position: absolute; left: 58%; top: 8px; bottom: 8px; width: 4px; border-radius: 2px; background: var(--talk);
+}
+
+/* Mock: dictation */
+.dictation { width: min(380px, 100%); display: grid; gap: 12px; }
+.dictation .lcd { gap: 10px; padding: 14px 16px 16px; }
+.wave { display: flex; align-items: center; justify-content: center; gap: 4px; height: 44px; }
+.wave i { width: 6px; border-radius: 2px; background: var(--lcd-ink); height: var(--h); }
+.typed { text-transform: none; font-size: 0.9rem; line-height: 1.45; min-height: 2.9em; }
+.typed .caret { display: inline-block; width: 0.55em; height: 1em; background: var(--lcd-ink); vertical-align: -0.12em; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .typed .caret { animation: none; } }
+
+/* Mock: decision card */
+.card {
+  width: min(380px, 100%); background: var(--bg); border-radius: 24px; padding: 18px;
+  display: grid; gap: 12px; border: 1px solid var(--line);
+}
+.card .ask { display: flex; align-items: center; gap: 10px; }
+.card .ask .badge {
+  font: 400 0.68rem/1 var(--pixel); letter-spacing: 0.06em; text-transform: uppercase;
+  background: var(--lcd); color: var(--lcd-ink); padding: 6px 8px; border-radius: 6px;
+}
+.card .cmd {
+  font: 500 0.88rem/1.45 ui-monospace, "SF Mono", Menlo, monospace; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; overflow-x: auto; white-space: nowrap;
+}
+.card .opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 8px; padding-bottom: var(--depth); }
+.opt {
+  min-height: 52px; border-radius: 14px; display: grid; place-items: center; text-align: center;
+  font: 600 0.86rem/1.15 var(--display); padding: 6px 8px;
+}
+.opt.yes { background: var(--confirm); color: var(--confirm-ink); --edge: var(--edge-confirm); }
+.opt.always { background: var(--surface); color: var(--ink); --ring: inset 0 0 0 2px var(--confirm); --edge: var(--edge-confirm); }
+.opt.no { background: var(--surface); color: var(--cancel-ink); --ring: inset 0 0 0 2px var(--cancel); --edge: var(--edge-cancel); }
+.opt.tell { background: var(--talk); color: var(--talk-ink); --edge: var(--edge-talk); }
+
+/* Mock: locked Mac */
+.locked { width: min(340px, 100%); display: grid; gap: 12px; }
+.locked .stage { height: 120px; display: flex; align-items: center; justify-content: center; gap: 14px; }
+.unlock {
+  min-height: 56px; border-radius: 16px; background: var(--confirm); color: var(--confirm-ink); --edge: var(--edge-confirm);
+  display: flex; align-items: center; justify-content: center; gap: 10px; font: 600 0.98rem/1 var(--display);
+}
+.unlock svg { width: 22px; height: 22px; }
+
+/* Extras: a plain list, not more cards. */
+.extras {
+  margin-top: clamp(48px, 7vw, 88px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 22px 32px; border-top: 1px solid var(--line); padding-top: 32px;
+}
+.extras div { display: grid; gap: 4px; min-width: 0; }
+.extras h4 { margin: 0; font: 600 1rem/1.3 var(--display); }
+.extras p { color: var(--muted); font-size: 0.95rem; }
+
+/* Mascots */
+.mascots-band { background: var(--surface); border-block: 1px solid var(--line); }
+.mascots { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+.mascot { display: grid; justify-items: center; gap: 10px; text-align: center; }
+.mascot img { width: 100%; max-width: 128px; border-radius: 23%; box-shadow: 0 10px 24px -14px rgb(0 0 0 / 0.5); }
+.mascot b { font: 400 0.82rem/1 var(--pixel); letter-spacing: 0.04em; }
+.mascot span { font-size: 0.85rem; color: var(--muted); line-height: 1.35; }
+@media (max-width: 640px) { .mascots { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* Steps: a real sequence, so numbered. */
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; counter-reset: step; list-style: none; margin: 0; padding: 0; }
+.steps li { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.steps .n {
+  justify-self: start; font: 400 0.75rem/1 var(--pixel); letter-spacing: 0.06em; text-transform: uppercase;
+  background: var(--bezel); color: var(--lcd); padding: 8px 10px; border-radius: 8px;
+}
+.steps h3 { font-size: var(--step-1); letter-spacing: -0.01em; }
+.steps p { color: var(--ink-soft); }
+@media (max-width: 760px) { .steps { grid-template-columns: minmax(0, 1fr); } }
+
+/* Privacy */
+.privacy { background: var(--bezel); color: var(--on-bezel); }
+.privacy .section-head p { color: var(--on-bezel-soft); }
+.privacy .eyebrow { color: var(--lcd); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 28px; }
+.facts div { display: grid; gap: 8px; min-width: 0; }
+.facts h3 { font-size: var(--step-1); }
+.facts p { color: var(--on-bezel-soft); font-size: 0.97rem; }
+.privacy a.more { color: var(--lcd); }
+
+/* FAQ */
+.faq { display: grid; gap: 0; max-width: 52rem; border-top: 1px solid var(--line); }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq summary {
+  cursor: pointer; list-style: none; padding: 18px 40px 18px 0; position: relative;
+  font: 600 var(--step-0)/1.35 var(--display);
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: "+"; position: absolute; right: 6px; top: 14px; font: 400 1.3rem/1 var(--pixel); color: var(--muted);
+}
+.faq details[open] summary::after { content: "−"; }
+.faq details p { padding: 0 0 20px; color: var(--ink-soft); max-width: 62ch; }
+
+/* Download */
+.download .wrap { display: grid; gap: 24px; justify-items: start; }
+.download h2 { font-size: var(--step-3); letter-spacing: -0.025em; }
+.download .btn-ghost { background: var(--raised); color: var(--ink); --edge: var(--edge-raised); }
+.download .btn-ghost small { color: var(--muted); }
+.ctas { padding-bottom: var(--depth); }
+.download .reqs { color: var(--muted); }
+
+/* Footer */
+footer { background: var(--bezel); color: var(--on-bezel-soft); font-size: 0.9rem; }
+footer .wrap { display: grid; gap: 18px; padding-block: 40px; }
+footer nav { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+footer nav a { color: var(--on-bezel); text-decoration: none; }
+footer nav a:hover { text-decoration: underline; }
+footer p { max-width: 70ch; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#">
+      <img src="img/apple-touch-icon.png" alt="" width="32" height="32">
+      Remotrol
+    </a>
+    <nav>
+      <a href="#funciones"><span data-l="es">Funciones</span><span data-l="en">Features</span></a>
+      <a href="#empezar"><span data-l="es">Cómo empezar</span><span data-l="en">Get started</span></a>
+      <a href="#privacidad"><span data-l="es">Privacidad</span><span data-l="en">Privacy</span></a>
+      <a href="#preguntas"><span data-l="es">Preguntas</span><span data-l="en">FAQ</span></a>
+    </nav>
+    <div class="lang" role="group" aria-label="Idioma / Language">
+      <button type="button" id="lang-es" data-set-lang="es" aria-pressed="true">ES</button>
+      <button type="button" id="lang-en" data-set-lang="en" aria-pressed="false">EN</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div class="hero-copy">
+        <p class="eyebrow"><span data-l="es">iPhone · iPad · Mac</span><span data-l="en">iPhone · iPad · Mac</span></p>
+        <h1 id="hero-title">
+          <span data-l="es">Tu Mac, <em>a un toque</em> desde el iPhone.</span>
+          <span data-l="en">Your Mac, <em>one tap away</em> on your iPhone.</span>
+        </h1>
+        <p class="lead" data-l="es">Remotrol convierte tu iPhone o iPad en un panel de botones y un mando para el Mac. Dicta, confirma y responde sin ir al teclado.</p>
+        <p class="lead" data-l="en">Remotrol turns your iPhone or iPad into a button board and remote for your Mac. Dictate, confirm and answer without reaching for the keyboard.</p>
+        <div class="ctas">
+          <a class="btn btn-talk" href="https://github.com/jon-gonzalez/remotrol-releases/releases/latest/download/Remotrol-Mac.zip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>
+            <span data-l="es">Descargar Remotrol Mac</span><span data-l="en">Download Remotrol Mac</span>
+          </a>
+          <span class="btn btn-ghost" aria-disabled="true">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.4 2-3.5 2-3.6-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.9-.9-3.1-.8C6.8 7.3 5.3 8.2 4.5 9.6c-1.7 2.9-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8s1.9.8 3.1.8c1.3 0 2.1-1.2 2.9-2.4.9-1.3 1.3-2.6 1.3-2.7 0 0-2.6-1-2.7-4zM14.2 5.6c.6-.8 1.1-1.9 1-3-.9 0-2.1.6-2.7 1.4-.6.7-1.1 1.8-1 2.9 1 .1 2.1-.5 2.7-1.3z"/></svg>
+            <span><span data-l="es">App Store</span><span data-l="en">App Store</span><br><small><span data-l="es">Próximamente</span><span data-l="en">Coming soon</span></small></span>
+          </span>
+        </div>
+        <p class="reqs" data-l="es">Gratis. Mac con macOS 13 o posterior; iPhone o iPad con iOS 17 o posterior, en la misma wifi.</p>
+        <p class="reqs" data-l="en">Free. A Mac with macOS 13 or later; an iPhone or iPad with iOS 17 or later, on the same Wi‑Fi.</p>
+      </div>
+
+      <div class="hero-device">
+        <div class="device" role="img" aria-label="Remotrol en un iPhone: la pantallita con la mascota y las teclas Revisar, Cancelar, Confirmar y Hablar" data-label-en="Remotrol on an iPhone: the small screen with the mascot and the Review, Cancel, Confirm and Talk keys">
+          <div class="status">
+            <span><span class="dot"></span>MacBook Pro</span>
+            <span>Terminal</span>
+          </div>
+          <div class="lcd-frame">
+            <div class="lcd">
+              <div class="row"><span id="lcd-label">EN REPOSO</span><span>remotrol</span></div>
+              <div class="row"><span>App: Terminal</span></div>
+              <div class="stage"><canvas id="hero-mascot" width="160" height="160"></canvas></div>
+              <div class="msg" id="lcd-msg">Esperando órdenes</div>
+            </div>
+          </div>
+          <div class="keys">
+            <div class="key key-review" id="key-review">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span data-l="es">Revisar</span><span data-l="en">Review</span>
+            </div>
+            <div class="key key-cancel" id="key-cancel">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+              <span data-l="es">Cancelar</span><span data-l="en">Cancel</span>
+            </div>
+            <div class="key key-confirm" id="key-confirm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+              <span data-l="es">Confirmar</span><span data-l="en">Confirm</span>
+            </div>
+            <div class="key key-talk" id="key-talk">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
+              <span data-l="es">Hablar</span><span data-l="en">Talk</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="funciones" aria-labelledby="features-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow"><span data-l="es">Funciones</span><span data-l="en">Features</span></p>
+        <h2 id="features-title">
+          <span data-l="es">Las teclas que más pulsas, en la mano.</span>
+          <span data-l="en">The keys you press most, in your hand.</span>
+        </h2>
+        <p data-l="es">Cuatro teclas para el día a día y un panel con los botones que tú quieras. Remotrol Mac, una app pequeña en la barra de menús, recibe las órdenes y las pulsa por ti.</p>
+        <p data-l="en">Four keys for everyday work and a board with whatever buttons you want. Remotrol Mac, a small menu bar app, receives the commands and presses them for you.</p>
+      </div>
+
+      <div class="features">
+        <article class="feature">
+          <div class="feature-copy">
+            <h3><span data-l="es">Un panel de botones a tu medida</span><span data-l="en">A button board made for you</span></h3>
+            <p data-l="es">Crea páginas de botones y ordénalas como quieras. Cada botón puede pulsar un atajo de teclado, escribir un texto, abrir una app, lanzar un script o subir el volumen.</p>
+            <p data-l="en">Create pages of buttons and arrange them your way. Each button can press a keyboard shortcut, type a text, open an app, run a script or turn up the volume.</p>
+            <ul data-l="es">
+              <li>Ruleta para ajustar con precisión y trackpad para mover el puntero.</li>
+              <li>Teclas del sistema: volumen, brillo, música y desplazamiento.</li>
+              <li>Los botones también están en la app Atajos, sin abrir Remotrol.</li>
+            </ul>
+            <ul data-l="en">
+              <li>A dial for fine adjustments and a trackpad to move the pointer.</li>
+              <li>System keys: volume, brightness, music and scrolling.</li>
+              <li>Buttons are also in the Shortcuts app, without opening Remotrol.</li>
+            </ul>
+          </div>
+          <div class="feature-art" aria-hidden="true">
+            <div class="board">
+              <div class="cap"><b>⌘S</b><span data-l="es">Guardar</span><span data-l="en">Save</span></div>
+              <div class="cap blue"><b>▶︎</b><span data-l="es">Tests</span><span data-l="en">Tests</span></div>
+              <div class="cap"><b>⌘⇧4</b><span data-l="es">Captura</span><span data-l="en">Screenshot</span></div>
+              <div class="cap"><b>&gt;_</b>Terminal</div>
+              <div class="cap accent"><b>git</b>Commit</div>
+              <div class="cap"><b>♪</b><span data-l="es">Música</span><span data-l="en">Music</span></div>
+              <div class="cap dial"></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="feature">
+          <div class="feature-copy">
+            <h3><span data-l="es">Dicta en vez de escribir</span><span data-l="en">Dictate instead of typing</span></h3>
+            <p data-l="es">Mantén pulsado Hablar, di lo que quieras y suelta. El texto se escribe en la app que tengas delante en el Mac. Puedes repasarlo antes de enviarlo.</p>
+            <p data-l="en">Hold Talk, say what you want and let go. The text is typed in whatever app is in front on your Mac. You can review it before sending.</p>
+            <ul data-l="es">
+              <li>La voz se transcribe en el iPhone siempre que se puede.</li>
+              <li>Aprende las palabras de tu proyecto: nombres de archivos, funciones y ramas.</li>
+            </ul>
+            <ul data-l="en">
+              <li>Speech is transcribed on the iPhone whenever possible.</li>
+              <li>It learns your project's words: file, function and branch names.</li>
+            </ul>
+          </div>
+          <div class="feature-art" aria-hidden="true">
+            <div class="dictation">
+              <div class="lcd-frame">
+                <div class="lcd">
+                  <div class="row"><span data-l="es">Escuchando</span><span data-l="en">Listening</span><span>0:04</span></div>
+                  <div class="wave" id="wave"></div>
+                  <div class="typed"><span id="typed"></span><span class="caret"></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="feature">
+          <div class="feature-copy">
+            <h3><span data-l="es">Responde a tus agentes de IA</span><span data-l="en">Answer your AI agents</span></h3>
+            <p data-l="es">Si programas con Claude Code en el terminal, Remotrol te enseña lo que pide: un permiso, una pregunta o un plan. Respondes con un toque, sin cambiar de ventana.</p>
+            <p data-l="en">If you code with Claude Code in the terminal, Remotrol shows what it's asking for: a permission, a question or a plan. You answer with one tap, without switching windows.</p>
+            <ul data-l="es">
+              <li>Las opciones de verdad de cada petición, una por botón.</li>
+              <li>«No, y decirle…»: le dictas qué hacer en su lugar.</li>
+              <li>Lista de sesiones para saltar a la que te necesita.</li>
+            </ul>
+            <ul data-l="en">
+              <li>Each request's real options, one per button.</li>
+              <li>"No, and tell it…": dictate what to do instead.</li>
+              <li>A list of sessions to jump to the one that needs you.</li>
+            </ul>
+          </div>
+          <div class="feature-art" aria-hidden="true">
+            <div class="card">
+              <div class="ask">
+                <span class="badge"><span data-l="es">Pide permiso</span><span data-l="en">Needs permission</span></span>
+                <span>Bash · api</span>
+              </div>
+              <div class="cmd">npm test -- auth/login.test.ts</div>
+              <div class="opts">
+                <div class="opt yes"><span data-l="es">Sí</span><span data-l="en">Yes</span></div>
+                <div class="opt always"><span data-l="es">Sí, no volver a preguntar</span><span data-l="en">Yes, don't ask again</span></div>
+                <div class="opt no">No</div>
+                <div class="opt tell"><span data-l="es">No, y decirle…</span><span data-l="en">No, and tell it…</span></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="feature">
+          <div class="feature-copy">
+            <h3><span data-l="es">Desbloquea el Mac con Face ID</span><span data-l="en">Unlock your Mac with Face ID</span></h3>
+            <p data-l="es">Cuando el Mac se bloquea, la pantallita te lo dice. Lo desbloqueas mirando al iPhone, o con Touch ID en el iPad.</p>
+            <p data-l="en">When the Mac locks, the small screen tells you. Unlock it by looking at your iPhone, or with Touch ID on the iPad.</p>
+            <p data-l="es">La contraseña la escribes una sola vez, en el Mac, y nunca sale de él. El iPhone solo firma con una llave guardada en su Secure Enclave.</p>
+            <p data-l="en">You type the password once, on the Mac, and it never leaves it. The iPhone only signs with a key kept in its Secure Enclave.</p>
+          </div>
+          <div class="feature-art" aria-hidden="true">
+            <div class="locked">
+              <div class="lcd-frame">
+                <div class="lcd">
+                  <div class="row"><span data-l="es">Bloqueado</span><span data-l="en">Locked</span><span>MacBook Pro</span></div>
+                  <div class="stage"><canvas id="sleep-mascot" width="120" height="120"></canvas></div>
+                  <div class="msg"><span data-l="es">Mac bloqueado</span><span data-l="en">Mac locked</span></div>
+                </div>
+              </div>
+              <div class="unlock">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M9 9.5v1M15 9.5v1M12 9.5v3.5h-1M9.5 15.5c1.4 1 3.6 1 5 0"/></svg>
+                <span data-l="es">Desbloquear con Face ID</span><span data-l="en">Unlock with Face ID</span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="extras">
+        <div>
+          <h4><span data-l="es">Apps y ventanas</span><span data-l="en">Apps and windows</span></h4>
+          <p data-l="es">Cambia de app, de ventana o de pestaña del terminal desde el iPhone.</p>
+          <p data-l="en">Switch apps, windows or terminal tabs from your iPhone.</p>
+        </div>
+        <div>
+          <h4><span data-l="es">Para usar sin mirar</span><span data-l="en">Use it without looking</span></h4>
+          <p data-l="es">Cada tecla vibra o suena distinto, y funciona con VoiceOver.</p>
+          <p data-l="en">Each key has its own vibration or sound, and it works with VoiceOver.</p>
+        </div>
+        <div>
+          <h4><span data-l="es">Diestros y zurdos</span><span data-l="en">Right- or left-handed</span></h4>
+          <p data-l="es">Las teclas cambian de lado para la mano que uses, en vertical y en horizontal.</p>
+          <p data-l="en">The keys switch sides for the hand you use, in portrait and landscape.</p>
+        </div>
+        <div>
+          <h4><span data-l="es">También en el iPad</span><span data-l="en">On the iPad too</span></h4>
+          <p data-l="es">Las teclas siempre a la vista y el panel con pestañas. Modo día y noche, en español e inglés.</p>
+          <p data-l="en">Keys always in sight and the board in tabs. Light and dark mode, in Spanish and English.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mascots-band" aria-labelledby="mascots-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow"><span data-l="es">Mascotas</span><span data-l="en">Mascots</span></p>
+        <h2 id="mascots-title">
+          <span data-l="es">Elige quién vive en tu pantallita.</span>
+          <span data-l="en">Choose who lives on your small screen.</span>
+        </h2>
+        <p data-l="es">Cada mascota escucha, trabaja, te pide permiso y celebra cuando algo termina. El icono de la app cambia con ella.</p>
+        <p data-l="en">Each mascot listens, works, asks for permission and celebrates when something finishes. The app icon changes with it.</p>
+      </div>
+      <div class="mascots">
+        <div class="mascot"><img src="img/robotin.png" alt="" width="128" height="128"><b>Robotín</b><span data-l="es">Robot con visor y antena</span><span data-l="en">Robot with a visor and antenna</span></div>
+        <div class="mascot"><img src="img/bichito.png" alt="" width="128" height="128"><b><span data-l="es">Bichito</span><span data-l="en">Bug</span></b><span data-l="es">El bichito con antenas</span><span data-l="en">The little bug with antennae</span></div>
+        <div class="mascot"><img src="img/orugo.png" alt="" width="128" height="128"><b>Orugo</b><span data-l="es">Robot explorador con orugas</span><span data-l="en">Explorer robot on tracks</span></div>
+        <div class="mascot"><img src="img/teclin.png" alt="" width="128" height="128"><b><span data-l="es">Teclín</span><span data-l="en">Keycap</span></b><span data-l="es">Una tecla con patas</span><span data-l="en">A keycap with legs</span></div>
+        <div class="mascot"><img src="img/casete.png" alt="" width="128" height="128"><b><span data-l="es">Casete</span><span data-l="en">Cassette</span></b><span data-l="es">Las bobinas son los ojos</span><span data-l="en">The reels are its eyes</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="empezar" aria-labelledby="start-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow"><span data-l="es">Cómo empezar</span><span data-l="en">Get started</span></p>
+        <h2 id="start-title">
+          <span data-l="es">Listo en un par de minutos.</span>
+          <span data-l="en">Ready in a couple of minutes.</span>
+        </h2>
+      </div>
+      <ol class="steps">
+        <li>
+          <span class="n"><span data-l="es">Paso 1</span><span data-l="en">Step 1</span></span>
+          <h3><span data-l="es">Instala Remotrol Mac</span><span data-l="en">Install Remotrol Mac</span></h3>
+          <p data-l="es">Descárgala, arrástrala a Aplicaciones y ábrela. Aparece un robot pequeño en la barra de menús.</p>
+          <p data-l="en">Download it, drag it to Applications and open it. A small robot appears in the menu bar.</p>
+        </li>
+        <li>
+          <span class="n"><span data-l="es">Paso 2</span><span data-l="en">Step 2</span></span>
+          <h3><span data-l="es">Dale permiso</span><span data-l="en">Grant permission</span></h3>
+          <p data-l="es">Su asistente te pide el permiso de Accesibilidad de macOS: es lo que le deja pulsar teclas por ti.</p>
+          <p data-l="en">Its assistant asks for the macOS Accessibility permission: that's what lets it press keys for you.</p>
+        </li>
+        <li>
+          <span class="n"><span data-l="es">Paso 3</span><span data-l="en">Step 3</span></span>
+          <h3><span data-l="es">Escanea el QR</span><span data-l="en">Scan the QR code</span></h3>
+          <p data-l="es">Abre Remotrol en el iPhone o el iPad y escanea el código que enseña el Mac. Ya está vinculado.</p>
+          <p data-l="en">Open Remotrol on your iPhone or iPad and scan the code the Mac shows. They're paired.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="privacy" id="privacidad" aria-labelledby="privacy-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow"><span data-l="es">Privacidad</span><span data-l="en">Privacy</span></p>
+        <h2 id="privacy-title">
+          <span data-l="es">Todo se queda entre tu iPhone y tu Mac.</span>
+          <span data-l="en">Everything stays between your iPhone and your Mac.</span>
+        </h2>
+        <p data-l="es">Remotrol no tiene servidores ni cuentas. No sabemos quién la usa ni para qué.</p>
+        <p data-l="en">Remotrol has no servers and no accounts. We don't know who uses it or what for.</p>
+      </div>
+      <div class="facts">
+        <div>
+          <h3><span data-l="es">Sin recogida de datos</span><span data-l="en">No data collection</span></h3>
+          <p data-l="es">Ni analítica, ni publicidad, ni seguimiento.</p>
+          <p data-l="en">No analytics, no ads, no tracking.</p>
+        </div>
+        <div>
+          <h3><span data-l="es">Solo por tu red local</span><span data-l="en">Only over your local network</span></h3>
+          <p data-l="es">El iPhone y el Mac se hablan cifrados, con la clave del código QR con el que los vinculas.</p>
+          <p data-l="en">The iPhone and the Mac talk encrypted, with the key in the QR code you pair them with.</p>
+        </div>
+        <div>
+          <h3><span data-l="es">Tu contraseña no viaja</span><span data-l="en">Your password stays put</span></h3>
+          <p data-l="es">Para desbloquear, el Mac guarda la contraseña en su llavero y el iPhone solo firma con Face ID.</p>
+          <p data-l="en">To unlock, the Mac keeps the password in its keychain and the iPhone only signs with Face ID.</p>
+        </div>
+      </div>
+      <p style="margin-top: 32px;">
+        <a class="more" href="https://github.com/jon-gonzalez/remotrol-releases/blob/main/PRIVACY.md"><span data-l="es">Lee la política de privacidad</span><span data-l="en">Read the privacy policy</span></a>
+      </p>
+    </div>
+  </section>
+
+  <section id="preguntas" aria-labelledby="faq-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow"><span data-l="es">Preguntas</span><span data-l="en">FAQ</span></p>
+        <h2 id="faq-title"><span data-l="es">Preguntas frecuentes</span><span data-l="en">Frequently asked questions</span></h2>
+      </div>
+      <div class="faq">
+        <details>
+          <summary><span data-l="es">¿Cuánto cuesta?</span><span data-l="en">How much does it cost?</span></summary>
+          <p data-l="es">Nada. Las dos apps son gratis, sin compras dentro ni suscripciones.</p>
+          <p data-l="en">Nothing. Both apps are free, with no in-app purchases or subscriptions.</p>
+        </details>
+        <details>
+          <summary><span data-l="es">¿Necesito Claude Code?</span><span data-l="en">Do I need Claude Code?</span></summary>
+          <p data-l="es">No. El panel de botones, el dictado, el trackpad y el desbloqueo funcionan con cualquier app. Si usas Claude Code, además ves y respondes lo que pide.</p>
+          <p data-l="en">No. The button board, dictation, trackpad and unlocking work with any app. If you use Claude Code, you can also see and answer what it asks.</p>
+        </details>
+        <details>
+          <summary><span data-l="es">¿Por qué Remotrol Mac no está en la Mac App Store?</span><span data-l="en">Why isn't Remotrol Mac on the Mac App Store?</span></summary>
+          <p data-l="es">Para pulsar teclas en otras apps necesita el permiso de Accesibilidad, que las apps de la Mac App Store no pueden usar. Está firmada con Developer ID y notarizada por Apple, y se actualiza sola.</p>
+          <p data-l="en">To press keys in other apps it needs the Accessibility permission, which Mac App Store apps can't use. It's signed with Developer ID, notarized by Apple, and updates itself.</p>
+        </details>
+        <details>
+          <summary><span data-l="es">¿Funciona fuera de casa o con Windows?</span><span data-l="en">Does it work away from home, or with Windows?</span></summary>
+          <p data-l="es">Solo funciona con un Mac, y con el iPhone o el iPad en la misma red que él. No pasa por internet.</p>
+          <p data-l="en">It only works with a Mac, with the iPhone or iPad on the same network. It doesn't go through the internet.</p>
+        </details>
+        <details>
+          <summary><span data-l="es">¿Es seguro?</span><span data-l="en">Is it safe?</span></summary>
+          <p data-l="es">La conexión va cifrada con una clave que solo está en el código QR, así que nadie más en tu wifi puede usarla. Para desbloquear el Mac hace falta además tu cara o tu huella.</p>
+          <p data-l="en">The connection is encrypted with a key that's only in the QR code, so nobody else on your Wi‑Fi can use it. Unlocking the Mac also needs your face or fingerprint.</p>
+        </details>
+        <details>
+          <summary><span data-l="es">¿Dónde pido ayuda o propongo una idea?</span><span data-l="en">Where do I get help or suggest an idea?</span></summary>
+          <p>
+            <span data-l="es">En las <a href="https://github.com/jon-gonzalez/remotrol-releases/issues">incidencias de GitHub</a>. También desde la app: Ajustes → Acerca de → Ayuda y sugerencias.</span>
+            <span data-l="en">In the <a href="https://github.com/jon-gonzalez/remotrol-releases/issues">GitHub issues</a>. Also from the app: Settings → About → Help and feedback.</span>
+          </p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="download" aria-labelledby="download-title">
+    <div class="wrap">
+      <h2 id="download-title"><span data-l="es">Pruébalo en tu Mac.</span><span data-l="en">Try it on your Mac.</span></h2>
+      <div class="ctas">
+        <a class="btn btn-talk" href="https://github.com/jon-gonzalez/remotrol-releases/releases/latest/download/Remotrol-Mac.zip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>
+          <span data-l="es">Descargar Remotrol Mac</span><span data-l="en">Download Remotrol Mac</span>
+        </a>
+        <a class="btn btn-ghost" href="https://github.com/jon-gonzalez/remotrol-releases/releases">
+          <span data-l="es">Todas las versiones</span><span data-l="en">All versions</span>
+        </a>
+      </div>
+      <p class="reqs" data-l="es">La app del iPhone y el iPad llegará pronto a la App Store.</p>
+      <p class="reqs" data-l="en">The iPhone and iPad app is coming soon to the App Store.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <nav>
+      <a href="https://github.com/jon-gonzalez/remotrol-releases/blob/main/LICENSE.md"><span data-l="es">Licencia de uso</span><span data-l="en">License agreement</span></a>
+      <a href="https://github.com/jon-gonzalez/remotrol-releases/blob/main/PRIVACY.md"><span data-l="es">Privacidad</span><span data-l="en">Privacy</span></a>
+      <a href="https://github.com/jon-gonzalez/remotrol-releases/issues"><span data-l="es">Ayuda</span><span data-l="en">Help</span></a>
+      <a href="https://github.com/jon-gonzalez/remotrol-releases/releases"><span data-l="es">Versiones</span><span data-l="en">Releases</span></a>
+    </nav>
+    <p>© 2026 Jon González. <span data-l="es">Todos los derechos reservados.</span><span data-l="en">All rights reserved.</span></p>
+    <p data-l="es">Claude Code es una marca de Anthropic. Mac, iPhone, iPad, Face ID y Touch ID son marcas de Apple Inc. Remotrol es una app independiente y no está afiliada a ellas.</p>
+    <p data-l="en">Claude Code is a trademark of Anthropic. Mac, iPhone, iPad, Face ID and Touch ID are trademarks of Apple Inc. Remotrol is an independent app and isn't affiliated with them.</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  // ---------- Language ----------
+  const root = document.documentElement;
+  const device = document.querySelector(".device");
+  const deviceLabel = { es: device.getAttribute("aria-label"), en: device.dataset.labelEn };
+  function setLang(lang, remember) {
+    root.lang = lang;
+    document.querySelectorAll("[data-set-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.setLang === lang)));
+    device.setAttribute("aria-label", deviceLabel[lang]);
+    if (remember) { try { localStorage.setItem("remotrol-lang", lang); } catch (e) {} }
+    renderLCD();
+  }
+  let initial = (navigator.language || "es").toLowerCase().startsWith("es") ? "es" : "en";
+  try { const saved = localStorage.getItem("remotrol-lang"); if (saved === "es" || saved === "en") initial = saved; } catch (e) {}
+  if (location.hash === "#en" || location.hash === "#es") initial = location.hash.slice(1);
+  document.querySelectorAll("[data-set-lang]").forEach(b => b.addEventListener("click", () => setLang(b.dataset.setLang, true)));
+
+  // ---------- Robotín, from the app's pixel art (ios/Sources/Mascot.swift) ----------
+  const BODY = ["......####......", "......####......", ".......##.......", ".##############.", ".##############.", ".##..........##.", "###..........###", ".##..........##.", ".##############.", ".####.####.####.", ".##############.", "....########....", "...##########...", "...###....###..."];
+  const RAISED = ["...#..####..#...", "......####......", ".......##......."];
+  const WALK = { 13: "....##....##...." };
+  const EYES = {
+    open: [[6,4],[6,5],[6,11],[6,10]], blink: [],
+    happy: [[6,3],[5,4],[5,5],[6,6],[6,12],[5,11],[5,10],[6,9]],
+    wide: [[5,4],[5,5],[6,4],[6,5],[7,4],[7,5],[5,11],[5,10],[6,11],[6,10],[7,11],[7,10]],
+    focus: [[6,3],[6,4],[6,5],[6,12],[6,11],[6,10]], asleep: [[7,4],[7,5],[7,11],[7,10]]
+  };
+  const MOUTHS = { small: [[9,7],[9,8]], open: [[9,7],[9,8],[10,7],[10,8]], smile: [[9,6],[10,7],[10,8],[9,9]] };
+
+  function pixels(mode, tick) {
+    const frame = tick % 2;
+    let rows = BODY.slice();
+    if (mode === "listening" || mode === "permission") rows.splice(0, RAISED.length, ...RAISED);
+    const walking = mode === "working" && frame === 1;
+    if (walking) for (const r in WALK) rows[r] = WALK[r];
+    let eyes = "open", mouth = "small";
+    if (mode === "idle" && tick % 6 === 5) eyes = "blink";
+    if (mode === "listening") mouth = frame ? "open" : "small";
+    if (mode === "working") eyes = "focus";
+    if (mode === "permission") { eyes = "wide"; mouth = "open"; }
+    if (mode === "done") { eyes = "happy"; mouth = "smile"; }
+    if (mode === "asleep") eyes = "asleep";
+    const grid = rows.map(line => [...line].map(c => c === "#"));
+    for (const [r, c] of MOUTHS[mouth]) grid[r][c] = false;
+    for (const [r, c] of EYES[eyes]) grid[r][c] = true;
+    return grid;
+  }
+  function hop(mode, tick) {
+    const f = tick % 2 === 1;
+    return mode === "working" ? (f ? 2 : 0) : mode === "permission" ? (f ? -10 : 0) : mode === "done" ? (f ? -6 : 0) : 0;
+  }
+  function draw(canvas, mode, tick, px) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = 16 * px, h = 14 * px + 14;
+    if (canvas.width !== w * dpr) {
+      canvas.width = w * dpr; canvas.height = h * dpr;
+      canvas.style.width = w + "px"; canvas.style.height = h + "px";
+    }
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = getComputedStyle(canvas).color || "#1F2A1E";
+    const y0 = 10 + hop(mode, tick) * (px / 9);
+    pixels(mode, tick).forEach((row, r) => row.forEach((on, c) => { if (on) ctx.fillRect(c * px, y0 + r * px, px - 0.6, px - 0.6); }));
+  }
+
+  // ---------- The hero's little story ----------
+  const STATES = [
+    { mode: "idle", label: ["En reposo", "Idle"], msg: ["Esperando órdenes", "Awaiting orders"], ticks: 6 },
+    { mode: "listening", label: ["Escuchando", "Listening"], msg: ["Te escucho", "Listening"], dots: true, key: "key-talk", ticks: 7 },
+    { mode: "working", label: ["Trabajando", "Working"], msg: ["Trabajando", "Working"], dots: true, ticks: 7 },
+    { mode: "permission", label: ["Pide permiso", "Needs permission"], msg: ["¿Me das permiso?", "May I?"], key: "key-confirm", keyAt: 4, ticks: 6 },
+    { mode: "done", label: ["Terminado", "Done"], msg: ["¡Hecho!", "Done!"], ticks: 6 }
+  ];
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const heroCanvas = document.getElementById("hero-mascot");
+  const sleepCanvas = document.getElementById("sleep-mascot");
+  const labelEl = document.getElementById("lcd-label");
+  const msgEl = document.getElementById("lcd-msg");
+  let stateIndex = 0, inState = 0, tick = 0;
+
+  function renderLCD() {
+    const s = STATES[stateIndex];
+    const i = root.lang === "en" ? 1 : 0;
+    labelEl.textContent = s.label[i];
+    msgEl.textContent = s.msg[i] + (s.dots ? ".".repeat(1 + (tick % 3)) : "");
+    draw(heroCanvas, s.mode, tick, 7);
+    draw(sleepCanvas, "asleep", 0, 5);
+    document.querySelectorAll(".key").forEach(k => k.classList.remove("is-down"));
+    if (s.key && inState >= (s.keyAt || 0)) document.getElementById(s.key).classList.add("is-down");
+  }
+  function step() {
+    tick++; inState++;
+    if (inState >= STATES[stateIndex].ticks) { inState = 0; stateIndex = (stateIndex + 1) % STATES.length; }
+    renderLCD();
+  }
+
+  // ---------- Dictation mock ----------
+  const wave = document.getElementById("wave");
+  const bars = Array.from({ length: 22 }, () => { const i = document.createElement("i"); wave.appendChild(i); return i; });
+  const typedEl = document.getElementById("typed");
+  const PHRASES = {
+    es: "Añade un test para el login con contraseña incorrecta",
+    en: "Add a test for logging in with a wrong password"
+  };
+  let typed = 0;
+  function renderDictation(animate) {
+    const text = PHRASES[root.lang === "en" ? "en" : "es"];
+    if (!animate) typed = text.length;
+    typedEl.textContent = text.slice(0, typed);
+    bars.forEach((b, i) => {
+      const base = 8 + 30 * Math.abs(Math.sin(i * 0.7 + (animate ? tick * 0.9 : 1)));
+      b.style.setProperty("--h", Math.round(base) + "px");
+    });
+  }
+  function stepDictation() {
+    const text = PHRASES[root.lang === "en" ? "en" : "es"];
+    typed = typed >= text.length + 12 ? 0 : typed + 1;
+    renderDictation(true);
+  }
+
+  setLang(initial, false);
+  renderDictation(!reduce);
+  if (!reduce) {
+    setInterval(step, 450);
+    setInterval(stepDictation, 110);
+  }
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderLCD);
+})();
+</script>
+</body>
+</html>
